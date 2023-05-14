@@ -2,7 +2,11 @@ import React from 'react'
 
 const Square = (props) => {
   return (
-    <button className="square" onClick={props.onClick}>
+    <button
+      className="square"
+      disabled={props.aiIsPreEmptive === undefined}
+      onClick={props.onClick}
+    >
       {props.value}
     </button>
   )
@@ -13,6 +17,7 @@ export class Board extends React.Component {
     return (
       <Square
         key={row * 3 + column}
+        aiIsPreEmptive={this.props.aiIsPreEmptive}
         value={this.props.squares[row][column]}
         onClick={() => {
           this.props.onClick(row, column)

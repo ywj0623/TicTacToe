@@ -91,6 +91,79 @@ function calculateWinner(squares) {
   return null
 }
 
+const weightingList = {
+  '0, 0': 0,
+  '0, 1': 0,
+  '0, 2': 0,
+  '1, 0': 0,
+  '1, 1': 0,
+  '1, 2': 0,
+  '2, 0': 0,
+  '2, 1': 0,
+  '2, 2': 0,
+}
+
+function betterPositionWeighting(gameInfos, weightingList) {
+  const squares = gameInfos.squares
+  const betterPosition = [
+    [0, 0], // 0
+    [0, 2], // 1
+    [1, 1], // 2
+    [2, 0], // 3
+    [2, 2], // 4
+  ]
+
+  for (let i = 0; i < betterPosition.length; i++) {
+    const [a, b] = betterPosition[i]
+
+    if (squares[a][b] === null) {
+      weightingList[`${a}, ${b}`] += 5
+    }
+  }
+
+  return weightingList
+}
+
+function basicDefenseWeighting(gameInfos, weightingList) {
+  const squares = gameInfos.squares
+
+  for (let i = 0; i < gameInfos.positionList.length; i++) {
+    const [a, b] = gameInfos.positionList[i]
+
+    if (squares[a][b] === gameInfos.roles.Player) {
+      for (let i = a - 1; i <= a + 1; i++) {
+        for (let j = b - 1; j <= b + 1; j++) {
+          if (i >= 0 && j >= 0 && i < 3 && j < 3 && !(i === a && j === b)) {
+            weightingList[`${i}, ${j}`] += 3
+          }
+        }
+      }
+    }
+  }
+
+  for (let i = 0; i < gameInfos.positionList.length; i++) {
+    const [a, b] = gameInfos.positionList[i]
+
+    if (squares[a][b] === gameInfos.roles.Player) {
+      weightingList[`${a}, ${b}`] = 0
+    }
+  }
+
+  return weightingList
+}
+
+function randomPosition(targetArray) {
+  const randomNum = Math.floor(Math.random() * 10)
+
+  if (targetArray.includes(randomNum)) {
+    const row = Math.floor(randomNum / 3)
+    const column = randomNum % 3
+    return { row, column }
+  }
+
+  return randomPosition(targetArray)
+}
+
 const GameInfos = (props) => {
   if (props.aiIsPreEmptive === undefined) {
     return (
@@ -133,11 +206,64 @@ export class Game extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      squares: Array.from({ length: 3 }, () => Array(3).fill(null)),
-      // squares: Array(3).fill(null).map(() => Array(3).fill(null))
+      aiIsPreEmptive: undefined,
+      roles: {
+        Player: undefined,
+        NPC: undefined,
+      },
       stepNumber: 0,
       oIsNext: true,
-      aiIsPreEmptive: undefined,
+      positionList: [
+        [0, 0],
+        [0, 1],
+        [0, 2],
+        [1, 0],
+        [1, 1],
+        [1, 2],
+        [2, 0],
+        [2, 1],
+        [2, 2],
+      ],
+      squares: Array.from({ length: 3 }, () => Array(3).fill(null)),
+      // squares: Array(3).fill(null).map(() => Array(3).fill(null))
+    }
+  }
+
+  componentDidUpdate(prevProps, prevStates) {
+    if (this.state.aiIsPreEmptive !== prevStates.aiIsPreEmptive) {
+      if (this.state.aiIsPreEmptive) {
+        this.setState(() => ({
+          roles: {
+            Player: 'O',
+            NPC: 'X',
+          },
+        }))
+      } else {
+        this.setState(() => ({
+          roles: {
+            Player: 'X',
+            NPC: 'O',
+          },
+        }))
+      }
+    }
+
+    if (
+      this.state.roles.NPC === 'O' &&
+      this.state.oIsNext !== prevStates.oIsNext &&
+      !this.state.oIsNext
+    ) {
+      const result = this.generatePosition(this.state, weightingList)
+      this.positionHandler(result.row, result.column)
+    } else if (
+      this.state.roles.NPC === 'X' &&
+      this.state.oIsNext !== prevStates.oIsNext &&
+      this.state.oIsNext
+    ) {
+      const result = this.generatePosition(this.state, weightingList)
+      this.positionHandler(result.row, result.column)
+    } else {
+      console.log('generatePosition function crush')
     }
   }
 
@@ -153,6 +279,33 @@ export class Game extends React.Component {
     }
 
     return
+  }
+
+  generatePosition(gameInfos, weightingList) {
+    betterPositionWeighting(gameInfos, weightingList)
+    basicDefenseWeighting(gameInfos, weightingList)
+    console.log(Object.values(weightingList))
+
+    const maxValue = Object.values(weightingList).sort((a, b) => b - a)[0]
+    const maxValueAmount = Object.values(weightingList).filter(
+      (node) => node === maxValue
+    )
+    let result
+
+    if (maxValueAmount.length > 1) {
+      const list = Object.values(weightingList)
+      let indices = []
+      let target = list.indexOf(maxValue)
+
+      while (target !== -1) {
+        indices.push(target)
+        target = list.indexOf(maxValue, target + 1)
+      }
+
+      result = randomPosition(indices)
+    }
+
+    return result
   }
 
   positionHandler(row, column) {
@@ -181,6 +334,7 @@ export class Game extends React.Component {
         <div className="game">
           <div className="game-board">
             <Board
+              aiIsPreEmptive={this.state.aiIsPreEmptive}
               squares={this.state.squares}
               onClick={(row, column) => {
                 this.positionHandler(row, column)
@@ -190,9 +344,9 @@ export class Game extends React.Component {
 
           <GameInfos
             aiIsPreEmptive={this.state?.aiIsPreEmptive}
-            winner={winner}
             oIsNext={this.state.oIsNext}
             stepNumber={this.state.stepNumber}
+            winner={winner}
             onChange={(e) => {
               this.firstStepHandler(e)
             }}
