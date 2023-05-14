@@ -1,6 +1,6 @@
 import React from 'react'
 
-function Square(props) {
+const Square = (props) => {
   return (
     <button className="square" onClick={props.onClick}>
       {props.value}
@@ -9,12 +9,13 @@ function Square(props) {
 }
 
 export class Board extends React.Component {
-  renderSquare(i) {
+  renderSquare(row, column) {
     return (
       <Square
-        value={this.props.squares[i]}
+        key={row * 3 + column}
+        value={this.props.squares[row][column]}
         onClick={() => {
-          this.props.onClick(i)
+          this.props.onClick(row, column)
         }}
       />
     )
@@ -26,8 +27,8 @@ export class Board extends React.Component {
         {[0, 1, 2].map((node, idx) => {
           return (
             <div className="board-row" key={idx}>
-              {[0, 1, 2].map((innerNode, innerIdx) => {
-                return this.renderSquare(3 * node + innerNode)
+              {[0, 1, 2].map((innerNode) => {
+                return this.renderSquare(node, innerNode)
               })}
             </div>
           )
