@@ -11,21 +11,19 @@ function choosePreEmptive() {
   return false
 }
 
-function firstPosition() {
-  const random = Math.floor(Math.random() * 10)
+function randomPosition(targetArray = null) {
+  const randomNum = Math.floor(Math.random() * 10)
+  const condition = targetArray
+    ? targetArray.includes(randomNum)
+    : 0 <= randomNum && randomNum !== 9
 
-  if (0 <= random && random !== 9) {
-    const row = Math.floor(random / 3)
-    const column = random % 3
+  if (condition) {
+    const row = Math.floor(randomNum / 3)
+    const column = randomNum % 3
     return { row, column }
   }
 
-  return firstPosition()
-
-  // while (!(0 <= random && random !== 9)) {
-  //   random = Math.floor(Math.random() * 10)
-  // }
-  // return random
+  return targetArray ? randomPosition(targetArray) : randomPosition()
 }
 
 function calculateWinner(squares) {
@@ -152,18 +150,6 @@ function basicDefenseWeighting(gameInfos, weightingList) {
   return weightingList
 }
 
-function randomPosition(targetArray) {
-  const randomNum = Math.floor(Math.random() * 10)
-
-  if (targetArray.includes(randomNum)) {
-    const row = Math.floor(randomNum / 3)
-    const column = randomNum % 3
-    return { row, column }
-  }
-
-  return randomPosition(targetArray)
-}
-
 const GameInfos = (props) => {
   if (props.aiIsPreEmptive === undefined) {
     return (
@@ -248,6 +234,7 @@ export class Game extends React.Component {
       }
     }
 
+    // TODO: fix the bug below
     if (
       this.state.roles.NPC === 'O' &&
       this.state.oIsNext !== prevStates.oIsNext &&
@@ -273,7 +260,7 @@ export class Game extends React.Component {
     }))
 
     if (e.aiIsPreEmptive) {
-      const result = firstPosition()
+      const result = randomPosition()
       this.positionHandler(result.row, result.column)
       return
     }
@@ -284,7 +271,6 @@ export class Game extends React.Component {
   generatePosition(gameInfos, weightingList) {
     betterPositionWeighting(gameInfos, weightingList)
     basicDefenseWeighting(gameInfos, weightingList)
-    console.log(Object.values(weightingList))
 
     const maxValue = Object.values(weightingList).sort((a, b) => b - a)[0]
     const maxValueAmount = Object.values(weightingList).filter(
