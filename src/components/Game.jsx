@@ -89,18 +89,6 @@ function calculateWinner(squares) {
   return null
 }
 
-const weightingList = {
-  '0, 0': 0,
-  '0, 1': 0,
-  '0, 2': 0,
-  '1, 0': 0,
-  '1, 1': 0,
-  '1, 2': 0,
-  '2, 0': 0,
-  '2, 1': 0,
-  '2, 2': 0,
-}
-
 function betterPositionWeighting(gameInfos, weightingList) {
   const squares = gameInfos.squares
   const betterPosition = [
@@ -144,10 +132,25 @@ function basicDefenseWeighting(gameInfos, weightingList) {
 
     if (squares[a][b] === gameInfos.roles.Player) {
       weightingList[`${a}, ${b}`] = 0
+    } else if (squares[a][b] === gameInfos.roles.NPC) {
+      weightingList[`${a}, ${b}`] = 0
     }
   }
 
+  console.log(weightingList)
   return weightingList
+}
+
+const weightingList = {
+  '0, 0': 0,
+  '0, 1': 0,
+  '0, 2': 0,
+  '1, 0': 0,
+  '1, 1': 0,
+  '1, 2': 0,
+  '2, 0': 0,
+  '2, 1': 0,
+  '2, 2': 0,
 }
 
 const GameInfos = (props) => {
@@ -234,7 +237,6 @@ export class Game extends React.Component {
       }
     }
 
-    // TODO: fix the bug below
     if (
       this.state.roles.NPC === 'O' &&
       this.state.oIsNext !== prevStates.oIsNext &&
@@ -276,18 +278,20 @@ export class Game extends React.Component {
     const maxValueAmount = Object.values(weightingList).filter(
       (node) => node === maxValue
     )
+    const list = Object.values(weightingList)
     let result
+    let indices = []
+    let target = list.indexOf(maxValue)
 
     if (maxValueAmount.length > 1) {
-      const list = Object.values(weightingList)
-      let indices = []
-      let target = list.indexOf(maxValue)
-
       while (target !== -1) {
         indices.push(target)
         target = list.indexOf(maxValue, target + 1)
       }
 
+      result = randomPosition(indices)
+    } else {
+      indices.push(target)
       result = randomPosition(indices)
     }
 
