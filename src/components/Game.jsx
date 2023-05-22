@@ -61,7 +61,7 @@ function choosePreEmptive() {
   return false
 }
 
-function randomPosition(targetArray = null) {
+function genRandomPosition(targetArray = null) {
   const randomNum = Math.floor(Math.random() * 10)
   const condition = targetArray
     ? targetArray.includes(randomNum)
@@ -73,7 +73,7 @@ function randomPosition(targetArray = null) {
     return { row, column }
   }
 
-  return targetArray ? randomPosition(targetArray) : randomPosition()
+  return targetArray ? genRandomPosition(targetArray) : genRandomPosition()
 }
 
 function calculateWinner(squares) {
@@ -182,7 +182,7 @@ function basicDefenseWeighting(gameInfos, weightingList) {
 
     if (squares[a][b] === gameInfos.roles.Player) {
       weightingList[`${a}, ${b}`] = 0
-    } else if (squares[a][b] === gameInfos.roles.NPC) {
+    } else if (squares[a][b] === gameInfos.roles.AI) {
       weightingList[`${a}, ${b}`] = 0
     }
   }
@@ -192,12 +192,11 @@ function basicDefenseWeighting(gameInfos, weightingList) {
 }
 
 export default function Game() {
-  const [state, dispatch] = useReducer(reducer, {
-    // only keep variants which will change during re-rendering
+  const [state, dispatch] = useReducer(updateState, {
     aiIsPreEmptive: undefined,
     roles: {
       Player: undefined,
-      NPC: undefined,
+      AI: undefined,
     },
     stepNumber: 0,
     oIsNext: true,
@@ -217,7 +216,7 @@ export default function Game() {
     // squares: Array(3).fill(null).map(() => Array(3).fill(null))
   })
 
-  const positionHandler = useCallback(
+  const updateSquares = useCallback(
     (row, column) => {
       const squares = state.squares.slice()
 
@@ -231,53 +230,17 @@ export default function Game() {
     [state.squares, state.oIsNext]
   )
 
-  useEffect(() => {
-    if (state.aiIsPreEmptive === true) {
-      dispatch({ type: 'NPC_X' })
-    } else if (state.aiIsPreEmptive === false) {
-      dispatch({ type: 'NPC_O' })
-    }
-
-    if (state.roles.NPC === 'O' && !state.oIsNext) {
-      console.log(1)
-      const result = generatePosition(state, weightingList)
-      const updateSquares = positionHandler(result.row, result.column)
-
-      if (updateSquares) {
-        dispatch({ type: 'updateSquares', payload: updateSquares })
-        dispatch({ type: 'accumulateStepNumber' })
-        dispatch({ type: 'oIsNext' })
-      } else {
-        console.log('generatePosition function crush')
-      }
-    } else if (state.roles.NPC === 'X' && state.oIsNext) {
-      console.log(2)
-      const result = generatePosition(state, weightingList)
-      const updateSquares = positionHandler(result.row, result.column)
-
-      if (updateSquares) {
-        dispatch({ type: 'updateSquares', payload: updateSquares })
-        dispatch({ type: 'accumulateStepNumber' })
-        dispatch({ type: 'oIsNext' })
-      } else {
-        console.log('generatePosition function crush')
-      }
-    }
-
-    dispatch({ type: 'updateWinner' })
-  }, [state.aiIsPreEmptive, positionHandler])
-
-  function reducer(state, action) {
+  function updateState(state, action) {
     switch (action.type) {
       case 'aiIsPreEmptive_True':
         return { ...state, aiIsPreEmptive: true }
       case 'aiIsPreEmptive_False':
         return { ...state, aiIsPreEmptive: false }
-      case 'NPC_O':
-        return { ...state, roles: { NPC: 'O', Player: 'X' } }
-      case 'NPC_X':
-        return { ...state, roles: { NPC: 'X', Player: 'O' } }
-      case 'updateSquares':
+      case 'AI_O':
+        return { ...state, roles: { AI: 'O', Player: 'X' } }
+      case 'AI_X':
+        return { ...state, roles: { AI: 'X', Player: 'O' } }
+      case 'updatedSquares':
         return { ...state, squares: action.payload }
       case 'accumulateStepNumber':
         return { ...state, stepNumber: state.stepNumber + 1 }
@@ -290,21 +253,11 @@ export default function Game() {
     }
   }
 
-  function firstStepHandler(e) {
+  function aiFirstStepHandler(e) {
     if (e.aiIsPreEmptive) {
       dispatch({ type: 'aiIsPreEmptive_True' })
-      const result = randomPosition()
-      const updateSquares = positionHandler(result.row, result.column)
-      if (updateSquares) {
-        dispatch({
-          type: 'updateSquares',
-          payload: updateSquares,
-        })
-        dispatch({ type: 'accumulateStepNumber' })
-        dispatch({ type: 'toggleOIsNext' })
-      } else {
-        console.log('generatePosition function crush')
-      }
+      const result = genRandomPosition()
+      positioningHandler(result.row, result.column)
       return
     }
 
@@ -331,14 +284,47 @@ export default function Game() {
         target = list.indexOf(maxValue, target + 1)
       }
 
-      result = randomPosition(indices)
+      result = genRandomPosition(indices)
     } else {
       indices.push(target)
-      result = randomPosition(indices)
+      result = genRandomPosition(indices)
     }
 
     return result
   }
+
+  function positioningHandler(row, column) {
+    const updatedSquares = updateSquares(row, column)
+    if (updatedSquares) {
+      dispatch({
+        type: 'updatedSquares',
+        payload: updatedSquares,
+      })
+      dispatch({ type: 'accumulateStepNumber' })
+      dispatch({ type: 'toggleOIsNext' })
+      return
+    }
+
+    return console.log('generatePosition function crush')
+  }
+
+  useEffect(() => {
+    if (state.aiIsPreEmptive === true) {
+      dispatch({ type: 'AI_X' })
+    } else if (state.aiIsPreEmptive === false) {
+      dispatch({ type: 'AI_O' })
+    }
+
+    if (state.roles.AI === 'O' && !state.oIsNext) {
+      const result = generatePosition(state, weightingList)
+      positioningHandler(result.row, result.column)
+    } else if (state.roles.AI === 'X' && state.oIsNext) {
+      const result = generatePosition(state, weightingList)
+      positioningHandler(result.row, result.column)
+    }
+
+    dispatch({ type: 'updateWinner' })
+  }, [state.aiIsPreEmptive, updateSquares])
 
   return (
     <>
@@ -348,17 +334,7 @@ export default function Game() {
             aiIsPreEmptive={state.aiIsPreEmptive}
             squares={state.squares}
             onClick={(row, column) => {
-              const updateSquares = positionHandler(row, column)
-              if (updateSquares) {
-                dispatch({
-                  type: 'updateSquares',
-                  payload: updateSquares,
-                })
-                dispatch({ type: 'accumulateStepNumber' })
-                dispatch({ type: 'toggleOIsNext' })
-              } else {
-                console.log('generatePosition function crush')
-              }
+              positioningHandler(row, column)
             }}
           />
         </div>
@@ -369,7 +345,7 @@ export default function Game() {
           stepNumber={state.stepNumber}
           winner={state.winner}
           onChange={(e) => {
-            firstStepHandler(e)
+            aiFirstStepHandler(e)
           }}
         />
       </div>
