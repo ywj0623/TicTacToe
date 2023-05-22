@@ -1,5 +1,55 @@
 import React from 'react'
-import { Board } from './Board'
+import { useReducer, useEffect, useCallback } from 'react'
+import Board from './Board'
+
+const weightingList = {
+  '0, 0': 0,
+  '0, 1': 0,
+  '0, 2': 0,
+  '1, 0': 0,
+  '1, 1': 0,
+  '1, 2': 0,
+  '2, 0': 0,
+  '2, 1': 0,
+  '2, 2': 0,
+}
+
+const GameInfos = (props) => {
+  if (props.aiIsPreEmptive === undefined) {
+    return (
+      <input
+        className="game-info"
+        type="button"
+        value="開始遊戲"
+        onClick={() => {
+          props?.onChange({
+            aiIsPreEmptive: choosePreEmptive(),
+          })
+        }}
+      />
+    )
+  }
+
+  return (
+    <div className="game-info">
+      <div>你是{props.aiIsPreEmptive ? '後攻：O' : '先攻：X'}</div>
+      {props.winner ? (
+        <>
+          <div>贏家是 {props.winner}</div>
+        </>
+      ) : (
+        <>
+          <div>目前： {props.oIsNext ? 'X' : 'O'}</div>
+          {props.stepNumber !== 9 ? (
+            <div>下一位： {props.oIsNext ? 'O' : 'X'}</div>
+          ) : (
+            <div>和局</div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
 
 function choosePreEmptive() {
   const randomNum = Math.random() * 100
@@ -137,140 +187,132 @@ function basicDefenseWeighting(gameInfos, weightingList) {
     }
   }
 
-  console.log(weightingList)
+  // console.log(weightingList)
   return weightingList
 }
 
-const weightingList = {
-  '0, 0': 0,
-  '0, 1': 0,
-  '0, 2': 0,
-  '1, 0': 0,
-  '1, 1': 0,
-  '1, 2': 0,
-  '2, 0': 0,
-  '2, 1': 0,
-  '2, 2': 0,
-}
+export default function Game() {
+  const [state, dispatch] = useReducer(reducer, {
+    // only keep variants which will change during re-rendering
+    aiIsPreEmptive: undefined,
+    roles: {
+      Player: undefined,
+      NPC: undefined,
+    },
+    stepNumber: 0,
+    oIsNext: true,
+    winner: null,
+    positionList: [
+      [0, 0],
+      [0, 1],
+      [0, 2],
+      [1, 0],
+      [1, 1],
+      [1, 2],
+      [2, 0],
+      [2, 1],
+      [2, 2],
+    ],
+    squares: Array.from({ length: 3 }, () => Array(3).fill(null)),
+    // squares: Array(3).fill(null).map(() => Array(3).fill(null))
+  })
 
-const GameInfos = (props) => {
-  if (props.aiIsPreEmptive === undefined) {
-    return (
-      <input
-        className="game-info"
-        type="button"
-        value="開始遊戲"
-        onClick={() => {
-          props.onChange({
-            aiIsPreEmptive: choosePreEmptive(),
-          })
-        }}
-      />
-    )
-  }
+  const positionHandler = useCallback(
+    (row, column) => {
+      const squares = state.squares.slice()
 
-  return (
-    <div className="game-info">
-      <div>你是{props.aiIsPreEmptive ? '後攻：O' : '先攻：X'}</div>
-      {props.winner ? (
-        <>
-          <div>贏家是 {props.winner}</div>
-        </>
-      ) : (
-        <>
-          <div>目前： {props.oIsNext ? 'X' : 'O'}</div>
-          {props.stepNumber !== 9 ? (
-            <div>下一位： {props.oIsNext ? 'O' : 'X'}</div>
-          ) : (
-            <div>和局</div>
-          )}
-        </>
-      )}
-    </div>
+      if (calculateWinner(state?.squares) || state?.squares[row][column]) {
+        return
+      }
+
+      squares[row][column] = state.oIsNext ? 'X' : 'O'
+      return squares
+    },
+    [state.squares, state.oIsNext]
   )
-}
 
-export class Game extends React.Component {
-  // 在 subclass 內定義 constructor(a) 時，一定要從呼叫 super(a) 開始
-  constructor(props) {
-    super(props)
-    this.state = {
-      aiIsPreEmptive: undefined,
-      roles: {
-        Player: undefined,
-        NPC: undefined,
-      },
-      stepNumber: 0,
-      oIsNext: true,
-      positionList: [
-        [0, 0],
-        [0, 1],
-        [0, 2],
-        [1, 0],
-        [1, 1],
-        [1, 2],
-        [2, 0],
-        [2, 1],
-        [2, 2],
-      ],
-      squares: Array.from({ length: 3 }, () => Array(3).fill(null)),
-      // squares: Array(3).fill(null).map(() => Array(3).fill(null))
+  useEffect(() => {
+    if (state.aiIsPreEmptive === true) {
+      dispatch({ type: 'NPC_X' })
+    } else if (state.aiIsPreEmptive === false) {
+      dispatch({ type: 'NPC_O' })
     }
-  }
 
-  componentDidUpdate(prevProps, prevStates) {
-    if (this.state.aiIsPreEmptive !== prevStates.aiIsPreEmptive) {
-      if (this.state.aiIsPreEmptive) {
-        this.setState(() => ({
-          roles: {
-            Player: 'O',
-            NPC: 'X',
-          },
-        }))
+    if (state.roles.NPC === 'O' && !state.oIsNext) {
+      console.log(1)
+      const result = generatePosition(state, weightingList)
+      const updateSquares = positionHandler(result.row, result.column)
+
+      if (updateSquares) {
+        dispatch({ type: 'updateSquares', payload: updateSquares })
+        dispatch({ type: 'accumulateStepNumber' })
+        dispatch({ type: 'oIsNext' })
       } else {
-        this.setState(() => ({
-          roles: {
-            Player: 'X',
-            NPC: 'O',
-          },
-        }))
+        console.log('generatePosition function crush')
+      }
+    } else if (state.roles.NPC === 'X' && state.oIsNext) {
+      console.log(2)
+      const result = generatePosition(state, weightingList)
+      const updateSquares = positionHandler(result.row, result.column)
+
+      if (updateSquares) {
+        dispatch({ type: 'updateSquares', payload: updateSquares })
+        dispatch({ type: 'accumulateStepNumber' })
+        dispatch({ type: 'oIsNext' })
+      } else {
+        console.log('generatePosition function crush')
       }
     }
 
-    if (
-      this.state.roles.NPC === 'O' &&
-      this.state.oIsNext !== prevStates.oIsNext &&
-      !this.state.oIsNext
-    ) {
-      const result = this.generatePosition(this.state, weightingList)
-      this.positionHandler(result.row, result.column)
-    } else if (
-      this.state.roles.NPC === 'X' &&
-      this.state.oIsNext !== prevStates.oIsNext &&
-      this.state.oIsNext
-    ) {
-      const result = this.generatePosition(this.state, weightingList)
-      this.positionHandler(result.row, result.column)
-    } else {
-      console.log('generatePosition function crush')
+    dispatch({ type: 'updateWinner' })
+  }, [state.aiIsPreEmptive, positionHandler])
+
+  function reducer(state, action) {
+    switch (action.type) {
+      case 'aiIsPreEmptive_True':
+        return { ...state, aiIsPreEmptive: true }
+      case 'aiIsPreEmptive_False':
+        return { ...state, aiIsPreEmptive: false }
+      case 'NPC_O':
+        return { ...state, roles: { NPC: 'O', Player: 'X' } }
+      case 'NPC_X':
+        return { ...state, roles: { NPC: 'X', Player: 'O' } }
+      case 'updateSquares':
+        return { ...state, squares: action.payload }
+      case 'accumulateStepNumber':
+        return { ...state, stepNumber: state.stepNumber + 1 }
+      case 'toggleOIsNext':
+        return { ...state, oIsNext: !state.oIsNext }
+      case 'updateWinner':
+        return { ...state, winner: calculateWinner(state.squares) }
+      default:
+        throw new Error()
     }
   }
 
-  firstStepHandler(e) {
-    this.setState(() => ({
-      aiIsPreEmptive: e.aiIsPreEmptive,
-    }))
-
+  function firstStepHandler(e) {
     if (e.aiIsPreEmptive) {
+      dispatch({ type: 'aiIsPreEmptive_True' })
       const result = randomPosition()
-      this.positionHandler(result.row, result.column)
+      const updateSquares = positionHandler(result.row, result.column)
+      if (updateSquares) {
+        dispatch({
+          type: 'updateSquares',
+          payload: updateSquares,
+        })
+        dispatch({ type: 'accumulateStepNumber' })
+        dispatch({ type: 'toggleOIsNext' })
+      } else {
+        console.log('generatePosition function crush')
+      }
       return
     }
 
+    dispatch({ type: 'aiIsPreEmptive_False' })
     return
   }
 
-  generatePosition(gameInfos, weightingList) {
+  function generatePosition(gameInfos, weightingList) {
     betterPositionWeighting(gameInfos, weightingList)
     basicDefenseWeighting(gameInfos, weightingList)
 
@@ -298,51 +340,39 @@ export class Game extends React.Component {
     return result
   }
 
-  positionHandler(row, column) {
-    const squares = this.state.squares.slice()
-
-    if (
-      calculateWinner(this.state.squares) ||
-      this.state.squares[row][column]
-    ) {
-      return
-    }
-
-    squares[row][column] = this.state.oIsNext ? 'X' : 'O'
-    this.setState({
-      squares: squares,
-      stepNumber: this.state.stepNumber + 1,
-      oIsNext: !this.state.oIsNext,
-    })
-  }
-
-  render() {
-    const winner = calculateWinner(this.state.squares)
-
-    return (
-      <>
-        <div className="game">
-          <div className="game-board">
-            <Board
-              aiIsPreEmptive={this.state.aiIsPreEmptive}
-              squares={this.state.squares}
-              onClick={(row, column) => {
-                this.positionHandler(row, column)
-              }}
-            />
-          </div>
-
-          <GameInfos
-            aiIsPreEmptive={this.state?.aiIsPreEmptive}
-            oIsNext={this.state.oIsNext}
-            stepNumber={this.state.stepNumber}
-            winner={winner}
-            onChange={(e) => {
-              this.firstStepHandler(e)
+  return (
+    <>
+      <div className="game">
+        <div className="game-board">
+          <Board
+            aiIsPreEmptive={state.aiIsPreEmptive}
+            squares={state.squares}
+            onClick={(row, column) => {
+              const updateSquares = positionHandler(row, column)
+              if (updateSquares) {
+                dispatch({
+                  type: 'updateSquares',
+                  payload: updateSquares,
+                })
+                dispatch({ type: 'accumulateStepNumber' })
+                dispatch({ type: 'toggleOIsNext' })
+              } else {
+                console.log('generatePosition function crush')
+              }
             }}
           />
         </div>
-      </>
-    )
-  }
+
+        <GameInfos
+          aiIsPreEmptive={state.aiIsPreEmptive}
+          oIsNext={state.oIsNext}
+          stepNumber={state.stepNumber}
+          winner={state.winner}
+          onChange={(e) => {
+            firstStepHandler(e)
+          }}
+        />
+      </div>
+    </>
+  )
 }

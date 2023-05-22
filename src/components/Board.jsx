@@ -4,41 +4,39 @@ const Square = (props) => {
   return (
     <button
       className="square"
-      disabled={props.aiIsPreEmptive === undefined}
-      onClick={props.onClick}
+      disabled={props?.aiIsPreEmptive === undefined}
+      onClick={props?.onClick}
     >
-      {props.value}
+      {props?.value}
     </button>
   )
 }
 
-export class Board extends React.Component {
-  renderSquare(row, column) {
-    return (
-      <Square
-        key={row * 3 + column}
-        aiIsPreEmptive={this.props.aiIsPreEmptive}
-        value={this.props.squares[row][column]}
-        onClick={() => {
-          this.props.onClick(row, column)
-        }}
-      />
-    )
-  }
+const renderSquare = (props, row, column) => {
+  return (
+    <Square
+      key={row * 3 + column}
+      aiIsPreEmptive={props?.aiIsPreEmptive}
+      value={props?.squares[row][column]}
+      onClick={() => {
+        props?.onClick(row, column)
+      }}
+    />
+  )
+}
 
-  render() {
-    return (
-      <div>
-        {[0, 1, 2].map((node, idx) => {
-          return (
-            <div className="board-row" key={idx}>
-              {[0, 1, 2].map((innerNode) => {
-                return this.renderSquare(node, innerNode)
-              })}
-            </div>
-          )
-        })}
-      </div>
-    )
-  }
+export default function Board(props) {
+  return (
+    <div>
+      {[0, 1, 2].map((node, idx) => {
+        return (
+          <div className="board-row" key={idx}>
+            {[0, 1, 2].map((innerNode) => {
+              return renderSquare(props, node, innerNode)
+            })}
+          </div>
+        )
+      })}
+    </div>
+  )
 }
