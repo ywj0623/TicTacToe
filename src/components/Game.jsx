@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React from 'react'
 import { useReducer, useEffect, useCallback } from 'react'
 import Board from './Board'
@@ -13,6 +14,50 @@ const weightingList = {
   '2, 1': 0,
   '2, 2': 0,
 }
+
+const lines = [
+  // 以下為完成連線的座標， [x, y] x 代表 row, y 代表 column
+  [
+    [0, 0],
+    [0, 1],
+    [0, 2],
+  ],
+  [
+    [1, 0],
+    [1, 1],
+    [1, 2],
+  ],
+  [
+    [2, 0],
+    [2, 1],
+    [2, 2],
+  ],
+  [
+    [0, 0],
+    [1, 0],
+    [2, 0],
+  ],
+  [
+    [0, 1],
+    [1, 1],
+    [2, 1],
+  ],
+  [
+    [0, 2],
+    [1, 2],
+    [2, 2],
+  ],
+  [
+    [0, 0],
+    [1, 1],
+    [2, 2],
+  ],
+  [
+    [0, 2],
+    [1, 1],
+    [2, 0],
+  ],
+]
 
 const GameInfos = (props) => {
   if (props.aiIsPreEmptive === undefined) {
@@ -36,6 +81,13 @@ const GameInfos = (props) => {
       {props.winner ? (
         <>
           <div>贏家是 {props.winner}</div>
+          <input
+            type="button"
+            value="再玩一局"
+            onClick={() => {
+              console.log('再玩一局')
+            }}
+          />
         </>
       ) : (
         <>
@@ -43,7 +95,16 @@ const GameInfos = (props) => {
           {props.stepNumber !== 9 ? (
             <div>下一位： {props.oIsNext ? 'O' : 'X'}</div>
           ) : (
-            <div>和局</div>
+            <>
+              <div>和局</div>
+              <input
+                type="button"
+                value="再玩一局"
+                onClick={() => {
+                  console.log('再玩一局')
+                }}
+              />
+            </>
           )}
         </>
       )}
@@ -76,72 +137,9 @@ function genRandomPosition(targetArray = null) {
   return targetArray ? genRandomPosition(targetArray) : genRandomPosition()
 }
 
-function calculateWinner(squares) {
-  const lines = [
-    // 以下為完成連線的座標， [x, y] x 代表 row, y 代表 column
-    [
-      [0, 0],
-      [0, 1],
-      [0, 2],
-    ],
-    [
-      [1, 0],
-      [1, 1],
-      [1, 2],
-    ],
-    [
-      [2, 0],
-      [2, 1],
-      [2, 2],
-    ],
-    [
-      [0, 0],
-      [1, 0],
-      [2, 0],
-    ],
-    [
-      [0, 1],
-      [1, 1],
-      [2, 1],
-    ],
-    [
-      [0, 2],
-      [1, 2],
-      [2, 2],
-    ],
-    [
-      [0, 0],
-      [1, 1],
-      [2, 2],
-    ],
-    [
-      [0, 2],
-      [1, 1],
-      [2, 0],
-    ],
-  ]
-
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i]
-    const [x1, y1] = a
-    const [x2, y2] = b
-    const [x3, y3] = c
-
-    if (
-      squares[x1][y1] &&
-      squares[x1][y1] === squares[x2][y2] &&
-      squares[x1][y1] === squares[x3][y3]
-    ) {
-      return squares[x1][y1]
-    }
-  }
-
-  return null
-}
-
-function betterPositionWeighting(gameInfos, weightingList) {
+function setSpecificPositionWeight(gameInfos, weightingList) {
   const squares = gameInfos.squares
-  const betterPosition = [
+  const specificPosition = [
     [0, 0], // 0
     [0, 2], // 1
     [1, 1], // 2
@@ -149,8 +147,8 @@ function betterPositionWeighting(gameInfos, weightingList) {
     [2, 2], // 4
   ]
 
-  for (let i = 0; i < betterPosition.length; i++) {
-    const [a, b] = betterPosition[i]
+  for (let i = 0; i < specificPosition.length; i++) {
+    const [a, b] = specificPosition[i]
 
     if (squares[a][b] === null) {
       weightingList[`${a}, ${b}`] += 5
@@ -160,7 +158,7 @@ function betterPositionWeighting(gameInfos, weightingList) {
   return weightingList
 }
 
-function basicDefenseWeighting(gameInfos, weightingList) {
+function checkOpponentSurroundingEmpty(gameInfos, weightingList) {
   const squares = gameInfos.squares
 
   for (let i = 0; i < gameInfos.positionList.length; i++) {
@@ -191,8 +189,130 @@ function basicDefenseWeighting(gameInfos, weightingList) {
   return weightingList
 }
 
+function checkOccupied(gameInfos, weightingList, occupiedSpace, weights) {
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i]
+    const [x1, y1] = a
+    const [x2, y2] = b
+    const [x3, y3] = c
+    const Player = gameInfos.aiIsPreEmptive ? 'O' : 'X'
+    const NPC = gameInfos.aiIsPreEmptive ? 'X' : 'O'
+
+    const [playerOccupied1, playerOccupied2, playerOccupied3] = [
+      gameInfos.squares[x1][y1] === Player,
+      gameInfos.squares[x2][y2] === Player,
+      gameInfos.squares[x3][y3] === Player,
+    ]
+    const [npcOccupied1, npcOccupied2, npcOccupied3] = [
+      gameInfos.squares[x1][y1] === NPC,
+      gameInfos.squares[x2][y2] === NPC,
+      gameInfos.squares[x3][y3] === NPC,
+    ]
+    const emptySpace = lines[i].filter((node) => node === null).length === 2
+
+    const conditions = [
+      (playerOccupied1 && emptySpace) ||
+        (playerOccupied2 && emptySpace) ||
+        (playerOccupied3 && emptySpace),
+      (npcOccupied1 && emptySpace) ||
+        (npcOccupied2 && emptySpace) ||
+        (npcOccupied3 && emptySpace),
+      (playerOccupied1 && playerOccupied2) ||
+        (playerOccupied1 && playerOccupied3) ||
+        (playerOccupied2 && playerOccupied3),
+      (npcOccupied1 && npcOccupied2) ||
+        (npcOccupied1 && npcOccupied3) ||
+        (npcOccupied2 && npcOccupied3),
+    ]
+
+    if (
+      (occupiedSpace === 1 && conditions[0]) ||
+      (occupiedSpace === 2 && conditions[2])
+    ) {
+      weightingList[`${x1}, ${y1}`] =
+        gameInfos.squares[x1][y1] === null ? +weights[0] : +0
+      weightingList[`${x2}, ${y2}`] =
+        gameInfos.squares[x2][y2] === null ? +weights[0] : +0
+      weightingList[`${x3}, ${y3}`] =
+        gameInfos.squares[x3][y3] === null ? +weights[0] : +0
+    }
+
+    if (
+      (occupiedSpace === 1 && conditions[1]) ||
+      (occupiedSpace === 2 && conditions[3])
+    ) {
+      weightingList[`${x1}, ${y1}`] =
+        gameInfos.squares[x1][y1] === null ? +weights[1] : +0
+      weightingList[`${x2}, ${y2}`] =
+        gameInfos.squares[x2][y2] === null ? +weights[1] : +0
+      weightingList[`${x3}, ${y3}`] =
+        gameInfos.squares[x3][y3] === null ? +weights[1] : +0
+    }
+  }
+
+  console.log('checkOccupied', weightingList)
+  return weightingList
+}
+
+function check1OccupiedAnd2Empty(gameInfos, weightingList) {
+  return checkOccupied(gameInfos, weightingList, 1, [15, 10])
+}
+
+function check2Occupied1Empty(gameInfos, weightingList) {
+  return checkOccupied(gameInfos, weightingList, 2, [50, 100])
+}
+
+function generatePosition(gameInfos, weightingList) {
+  setSpecificPositionWeight(gameInfos, weightingList)
+  checkOpponentSurroundingEmpty(gameInfos, weightingList)
+  check1OccupiedAnd2Empty(gameInfos, weightingList)
+  check2Occupied1Empty(gameInfos, weightingList)
+
+  const maxValue = Object.values(weightingList).sort((a, b) => b - a)[0]
+  const maxValueAmount = Object.values(weightingList).filter(
+    (node) => node === maxValue,
+  )
+  const list = Object.values(weightingList)
+  let result
+  let indices = []
+  let target = list.indexOf(maxValue)
+
+  if (maxValueAmount.length > 1) {
+    while (target !== -1) {
+      indices.push(target)
+      target = list.indexOf(maxValue, target + 1)
+    }
+
+    result = genRandomPosition(indices)
+  } else {
+    indices.push(target)
+    result = genRandomPosition(indices)
+  }
+
+  return result
+}
+
+function checkWinner(squares) {
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i]
+    const [x1, y1] = a
+    const [x2, y2] = b
+    const [x3, y3] = c
+
+    if (
+      squares[x1][y1] &&
+      squares[x1][y1] === squares[x2][y2] &&
+      squares[x1][y1] === squares[x3][y3]
+    ) {
+      return squares[x1][y1]
+    }
+  }
+
+  return null
+}
+
 export default function Game() {
-  const [state, dispatch] = useReducer(updateState, {
+  const [state, dispatch] = useReducer(stateReducer, {
     aiIsPreEmptive: undefined,
     roles: {
       Player: undefined,
@@ -220,17 +340,17 @@ export default function Game() {
     (row, column) => {
       const squares = state.squares.slice()
 
-      if (calculateWinner(state?.squares) || state?.squares[row][column]) {
+      if (checkWinner(state?.squares) || state?.squares[row][column]) {
         return
       }
 
       squares[row][column] = state.oIsNext ? 'X' : 'O'
       return squares
     },
-    [state.squares, state.oIsNext]
+    [state.squares, state.oIsNext],
   )
 
-  function updateState(state, action) {
+  function stateReducer(state, action) {
     switch (action.type) {
       case 'aiIsPreEmptive_True':
         return { ...state, aiIsPreEmptive: true }
@@ -247,17 +367,17 @@ export default function Game() {
       case 'toggleOIsNext':
         return { ...state, oIsNext: !state.oIsNext }
       case 'updateWinner':
-        return { ...state, winner: calculateWinner(state.squares) }
+        return { ...state, winner: checkWinner(state.squares) }
       default:
         throw new Error()
     }
   }
 
-  function aiFirstStepHandler(e) {
+  function handleFirstMove(e) {
     if (e.aiIsPreEmptive) {
       dispatch({ type: 'aiIsPreEmptive_True' })
       const result = genRandomPosition()
-      positioningHandler(result.row, result.column)
+      updateGameState(result.row, result.column)
       return
     }
 
@@ -265,35 +385,7 @@ export default function Game() {
     return
   }
 
-  function generatePosition(gameInfos, weightingList) {
-    betterPositionWeighting(gameInfos, weightingList)
-    basicDefenseWeighting(gameInfos, weightingList)
-
-    const maxValue = Object.values(weightingList).sort((a, b) => b - a)[0]
-    const maxValueAmount = Object.values(weightingList).filter(
-      (node) => node === maxValue
-    )
-    const list = Object.values(weightingList)
-    let result
-    let indices = []
-    let target = list.indexOf(maxValue)
-
-    if (maxValueAmount.length > 1) {
-      while (target !== -1) {
-        indices.push(target)
-        target = list.indexOf(maxValue, target + 1)
-      }
-
-      result = genRandomPosition(indices)
-    } else {
-      indices.push(target)
-      result = genRandomPosition(indices)
-    }
-
-    return result
-  }
-
-  function positioningHandler(row, column) {
+  function updateGameState(row, column) {
     const updatedSquares = updateSquares(row, column)
     if (updatedSquares) {
       dispatch({
@@ -317,38 +409,37 @@ export default function Game() {
 
     if (state.roles.AI === 'O' && !state.oIsNext) {
       const result = generatePosition(state, weightingList)
-      positioningHandler(result.row, result.column)
+      updateGameState(result.row, result.column)
     } else if (state.roles.AI === 'X' && state.oIsNext) {
       const result = generatePosition(state, weightingList)
-      positioningHandler(result.row, result.column)
+      updateGameState(result.row, result.column)
     }
 
     dispatch({ type: 'updateWinner' })
   }, [state.aiIsPreEmptive, updateSquares])
 
   return (
-    <>
-      <div className="game">
-        <div className="game-board">
-          <Board
-            aiIsPreEmptive={state.aiIsPreEmptive}
-            squares={state.squares}
-            onClick={(row, column) => {
-              positioningHandler(row, column)
-            }}
-          />
-        </div>
-
-        <GameInfos
+    <div className="game">
+      {/* {console.log(state.squares)} */}
+      <div className="game-board">
+        <Board
           aiIsPreEmptive={state.aiIsPreEmptive}
-          oIsNext={state.oIsNext}
-          stepNumber={state.stepNumber}
-          winner={state.winner}
-          onChange={(e) => {
-            aiFirstStepHandler(e)
+          squares={state.squares}
+          onClick={(row, column) => {
+            updateGameState(row, column)
           }}
         />
       </div>
-    </>
+
+      <GameInfos
+        aiIsPreEmptive={state.aiIsPreEmptive}
+        oIsNext={state.oIsNext}
+        stepNumber={state.stepNumber}
+        winner={state.winner}
+        onChange={(e) => {
+          handleFirstMove(e)
+        }}
+      />
+    </div>
   )
 }
