@@ -4,8 +4,12 @@ import PropTypes from 'prop-types'
 const Square = (props) => {
   return (
     <button
-      className="w-[150px] h-[150px] max-w-[150px] max-h-[150px] rounded-[40px]"
       style={{
+        width: '150px',
+        height: '150px',
+        maxWidth: '150px',
+        maxHeight: '150px',
+        borderRadius: '40px',
         backgroundSize: 'auto',
         backgroundImage: 'url(/images/gird_bg.svg)',
         boxShadow: '0 14px 17px rgb(0, 0, 0, 0.07)',

@@ -59,58 +59,58 @@ const lines = [
   ],
 ]
 
-const GameInfos = (props) => {
-  if (props.aiIsPreEmptive === undefined) {
-    return (
-      <input
-        className="text-white mt-4"
-        type="button"
-        value="開始遊戲"
-        onClick={() => {
-          props?.onChange({
-            aiIsPreEmptive: choosePreEmptive(),
-          })
-        }}
-      />
-    )
-  }
+// const GameInfos = (props) => {
+//   if (props.aiIsPreEmptive === undefined) {
+//     return (
+//       <input
+//         className="text-white mt-4"
+//         type="button"
+//         value="開始遊戲"
+//         onClick={() => {
+//           props?.onChange({
+//             aiIsPreEmptive: choosePreEmptive(),
+//           })
+//         }}
+//       />
+//     )
+//   }
 
-  // return (
-  //   <div className="">
-  //     <div>你是{props.aiIsPreEmptive ? '後攻：O' : '先攻：X'}</div>
-  //     {props.winner ? (
-  //       <>
-  //         <div>贏家是 {props.winner}</div>
-  //         <input
-  //           type="button"
-  //           value="再玩一局"
-  //           onClick={() => {
-  //             console.log('再玩一局')
-  //           }}
-  //         />
-  //       </>
-  //     ) : (
-  //       <>
-  //         <div>目前： {props.oIsNext ? 'X' : 'O'}</div>
-  //         {props.stepNumber !== 9 ? (
-  //           <div>下一位： {props.oIsNext ? 'O' : 'X'}</div>
-  //         ) : (
-  //           <>
-  //             <div>和局</div>
-  //             <input
-  //               type="button"
-  //               value="再玩一局"
-  //               onClick={() => {
-  //                 console.log('再玩一局')
-  //               }}
-  //             />
-  //           </>
-  //         )}
-  //       </>
-  //     )}
-  //   </div>
-  // )
-}
+//   // return (
+//   //   <div className="">
+//   //     <div>你是{props.aiIsPreEmptive ? '後攻：O' : '先攻：X'}</div>
+//   //     {props.winner ? (
+//   //       <>
+//   //         <div>贏家是 {props.winner}</div>
+//   //         <input
+//   //           type="button"
+//   //           value="再玩一局"
+//   //           onClick={() => {
+//   //             console.log('再玩一局')
+//   //           }}
+//   //         />
+//   //       </>
+//   //     ) : (
+//   //       <>
+//   //         <div>目前： {props.oIsNext ? 'X' : 'O'}</div>
+//   //         {props.stepNumber !== 9 ? (
+//   //           <div>下一位： {props.oIsNext ? 'O' : 'X'}</div>
+//   //         ) : (
+//   //           <>
+//   //             <div>和局</div>
+//   //             <input
+//   //               type="button"
+//   //               value="再玩一局"
+//   //               onClick={() => {
+//   //                 console.log('再玩一局')
+//   //               }}
+//   //             />
+//   //           </>
+//   //         )}
+//   //       </>
+//   //     )}
+//   //   </div>
+//   // )
+// }
 
 function choosePreEmptive() {
   const randomNum = Math.random() * 100
@@ -373,8 +373,8 @@ export default function Game() {
     }
   }
 
-  function handleFirstMove(e) {
-    if (e.aiIsPreEmptive) {
+  function handleFirstMove(aiIsPreEmptive) {
+    if (aiIsPreEmptive) {
       dispatch({ type: 'aiIsPreEmptive_True' })
       const result = genRandomPosition()
       updateGameState(result.row, result.column)
@@ -429,8 +429,18 @@ export default function Game() {
         }}
       />
 
-      <div className="bg-white/10 mx-auto rounded-[40px] mt-24">
-        <div className="flex flex-row gap-x-8 flex-nowrap p-10 items-start">
+      <div
+        className="bg-white/10 mx-auto mt-24 relative"
+        style={{ borderRadius: '40px' }}
+      >
+        <div
+          className={`flex flex-row gap-x-8 flex-nowrap px-10 py-6 items-start ${
+            state.aiIsPreEmptive === undefined ||
+            (state?.winner === null && state?.stepNumber === 9)
+              ? 'opacity-20'
+              : ''
+          }`}
+        >
           <div className="flex flex-col gap-y-2">
             <div
               className="w-20 h-20 rounded-full flex justify-center items-center"
@@ -462,7 +472,7 @@ export default function Game() {
           </div>
 
           <div className="flex justify-center items-center h-20">
-            <div className="text-5xl text-white">0 : 0</div>
+            <div className="text-5xl text-white tracking-widest">0:0</div>
           </div>
 
           <div className="flex flex-col gap-y-2">
@@ -495,9 +505,31 @@ export default function Game() {
             <div className="text-white/30 text-center text-sm">Player 1</div>
           </div>
         </div>
+
+        {state?.aiIsPreEmptive === undefined ||
+        (state?.winner === null && state?.stepNumber === 9) ? (
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-white/5 flex justify-center items-center"
+            style={{ borderRadius: '40px' }}
+          >
+            <input
+              className="text-white mt-4 text-3xl w-full h-full"
+              type="button"
+              value={`${
+                state.aiIsPreEmptive === undefined ? 'Start' : 'Play Again'
+              }`}
+              onClick={() => {
+                const aiIsPreEmptive = choosePreEmptive()
+                handleFirstMove(aiIsPreEmptive)
+              }}
+            />
+          </div>
+        ) : (
+          <></>
+        )}
       </div>
 
-      <GameInfos
+      {/* <GameInfos
         aiIsPreEmptive={state.aiIsPreEmptive}
         oIsNext={state.oIsNext}
         stepNumber={state.stepNumber}
@@ -505,7 +537,7 @@ export default function Game() {
         onChange={(e) => {
           handleFirstMove(e)
         }}
-      />
+      /> */}
     </div>
   )
 }
