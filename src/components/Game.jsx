@@ -63,7 +63,7 @@ const GameInfos = (props) => {
   if (props.aiIsPreEmptive === undefined) {
     return (
       <input
-        className="game-info"
+        className="text-white mt-4"
         type="button"
         value="開始遊戲"
         onClick={() => {
@@ -75,41 +75,41 @@ const GameInfos = (props) => {
     )
   }
 
-  return (
-    <div className="game-info">
-      <div>你是{props.aiIsPreEmptive ? '後攻：O' : '先攻：X'}</div>
-      {props.winner ? (
-        <>
-          <div>贏家是 {props.winner}</div>
-          <input
-            type="button"
-            value="再玩一局"
-            onClick={() => {
-              console.log('再玩一局')
-            }}
-          />
-        </>
-      ) : (
-        <>
-          <div>目前： {props.oIsNext ? 'X' : 'O'}</div>
-          {props.stepNumber !== 9 ? (
-            <div>下一位： {props.oIsNext ? 'O' : 'X'}</div>
-          ) : (
-            <>
-              <div>和局</div>
-              <input
-                type="button"
-                value="再玩一局"
-                onClick={() => {
-                  console.log('再玩一局')
-                }}
-              />
-            </>
-          )}
-        </>
-      )}
-    </div>
-  )
+  // return (
+  //   <div className="">
+  //     <div>你是{props.aiIsPreEmptive ? '後攻：O' : '先攻：X'}</div>
+  //     {props.winner ? (
+  //       <>
+  //         <div>贏家是 {props.winner}</div>
+  //         <input
+  //           type="button"
+  //           value="再玩一局"
+  //           onClick={() => {
+  //             console.log('再玩一局')
+  //           }}
+  //         />
+  //       </>
+  //     ) : (
+  //       <>
+  //         <div>目前： {props.oIsNext ? 'X' : 'O'}</div>
+  //         {props.stepNumber !== 9 ? (
+  //           <div>下一位： {props.oIsNext ? 'O' : 'X'}</div>
+  //         ) : (
+  //           <>
+  //             <div>和局</div>
+  //             <input
+  //               type="button"
+  //               value="再玩一局"
+  //               onClick={() => {
+  //                 console.log('再玩一局')
+  //               }}
+  //             />
+  //           </>
+  //         )}
+  //       </>
+  //     )}
+  //   </div>
+  // )
 }
 
 function choosePreEmptive() {
@@ -419,16 +419,82 @@ export default function Game() {
   }, [state.aiIsPreEmptive, updateSquares])
 
   return (
-    <div className="game">
+    <div className="min-h-screen container mx-auto flex flex-col items-middle justify-center">
       {/* {console.log(state.squares)} */}
-      <div className="game-board">
-        <Board
-          aiIsPreEmptive={state.aiIsPreEmptive}
-          squares={state.squares}
-          onClick={(row, column) => {
-            updateGameState(row, column)
-          }}
-        />
+      <Board
+        aiIsPreEmptive={state.aiIsPreEmptive}
+        squares={state.squares}
+        onClick={(row, column) => {
+          updateGameState(row, column)
+        }}
+      />
+
+      <div className="bg-white/10 mx-auto rounded-[40px] mt-24">
+        <div className="flex flex-row gap-x-8 flex-nowrap p-10 items-start">
+          <div className="flex flex-col gap-y-2">
+            <div
+              className="w-20 h-20 rounded-full flex justify-center items-center"
+              style={{
+                backgroundColor:
+                  (state?.aiIsPreEmptive !== undefined &&
+                    state?.aiIsPreEmptive &&
+                    state?.oIsNext) ||
+                  (state?.aiIsPreEmptive !== undefined &&
+                    !state?.aiIsPreEmptive &&
+                    !state?.oIsNext)
+                    ? 'rgba(255, 255, 255, 0.3)'
+                    : 'rgba(0, 0, 0, 0.2)',
+              }}
+            >
+              {state.roles?.AI === undefined ? (
+                <></>
+              ) : (
+                <img
+                  className="w-8"
+                  src={`/images/${
+                    state.roles?.AI === 'X' ? 'x' : 'o'
+                  }_white.svg`}
+                />
+              )}
+            </div>
+            <div className="text-white/70 text-center">A.I</div>
+            <div className="text-white/30 text-center text-sm">Player 2</div>
+          </div>
+
+          <div className="flex justify-center items-center h-20">
+            <div className="text-5xl text-white">0 : 0</div>
+          </div>
+
+          <div className="flex flex-col gap-y-2">
+            <div
+              className="w-20 h-20 rounded-full flex justify-center items-center"
+              style={{
+                backgroundColor:
+                  (state?.aiIsPreEmptive !== undefined &&
+                    state?.aiIsPreEmptive &&
+                    !state?.oIsNext) ||
+                  (state?.aiIsPreEmptive !== undefined &&
+                    !state?.aiIsPreEmptive &&
+                    state?.oIsNext)
+                    ? 'rgba(255, 255, 255, 0.3)'
+                    : 'rgba(0, 0, 0, 0.2)',
+              }}
+            >
+              {state.roles?.Player === undefined ? (
+                <></>
+              ) : (
+                <img
+                  className="w-10"
+                  src={`/images/${
+                    state.roles?.Player === 'X' ? 'x' : 'o'
+                  }_white.svg`}
+                />
+              )}
+            </div>
+            <div className="text-white/70 text-center">You</div>
+            <div className="text-white/30 text-center text-sm">Player 1</div>
+          </div>
+        </div>
       </div>
 
       <GameInfos
