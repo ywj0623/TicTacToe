@@ -180,7 +180,8 @@ function checkOpponentSurroundingEmpty(gameInfos, weightingList) {
 
     if (squares[a][b] === gameInfos.roles.Player) {
       weightingList[`${a}, ${b}`] = 0
-    } else if (squares[a][b] === gameInfos.roles.AI) {
+    }
+    else if (squares[a][b] === gameInfos.roles.AI) {
       weightingList[`${a}, ${b}`] = 0
     }
   }
@@ -270,7 +271,7 @@ function generatePosition(gameInfos, weightingList) {
 
   const maxValue = Object.values(weightingList).sort((a, b) => b - a)[0]
   const maxValueAmount = Object.values(weightingList).filter(
-    (node) => node === maxValue,
+    (node) => node === maxValue
   )
   const list = Object.values(weightingList)
   let result
@@ -284,7 +285,8 @@ function generatePosition(gameInfos, weightingList) {
     }
 
     result = genRandomPosition(indices)
-  } else {
+  }
+  else {
     indices.push(target)
     result = genRandomPosition(indices)
   }
@@ -312,7 +314,7 @@ function checkWinner(squares) {
 }
 
 export default function Game() {
-  const [state, dispatch] = useReducer(stateReducer, {
+  const initState = {
     aiIsPreEmptive: undefined,
     roles: {
       Player: undefined,
@@ -334,7 +336,8 @@ export default function Game() {
     ],
     squares: Array.from({ length: 3 }, () => Array(3).fill(null)),
     // squares: Array(3).fill(null).map(() => Array(3).fill(null))
-  })
+  }
+  const [state, dispatch] = useReducer(stateReducer, initState)
 
   const updateSquares = useCallback(
     (row, column) => {
@@ -347,29 +350,39 @@ export default function Game() {
       squares[row][column] = state.oIsNext ? 'X' : 'O'
       return squares
     },
-    [state.squares, state.oIsNext],
+    [state.squares, state.oIsNext]
   )
 
   function stateReducer(state, action) {
     switch (action.type) {
-      case 'aiIsPreEmptive_True':
-        return { ...state, aiIsPreEmptive: true }
-      case 'aiIsPreEmptive_False':
-        return { ...state, aiIsPreEmptive: false }
-      case 'AI_O':
-        return { ...state, roles: { AI: 'O', Player: 'X' } }
-      case 'AI_X':
-        return { ...state, roles: { AI: 'X', Player: 'O' } }
-      case 'updatedSquares':
-        return { ...state, squares: action.payload }
-      case 'accumulateStepNumber':
-        return { ...state, stepNumber: state.stepNumber + 1 }
-      case 'toggleOIsNext':
-        return { ...state, oIsNext: !state.oIsNext }
-      case 'updateWinner':
-        return { ...state, winner: checkWinner(state.squares) }
-      default:
-        throw new Error()
+    case 'aiIsPreEmptive_True':
+      return { ...state, aiIsPreEmptive: true }
+    case 'aiIsPreEmptive_False':
+      return { ...state, aiIsPreEmptive: false }
+    case 'AI_O':
+      return { ...state, roles: { AI: 'O', Player: 'X' } }
+    case 'AI_X':
+      return { ...state, roles: { AI: 'X', Player: 'O' } }
+    case 'updatedSquares':
+      return { ...state, squares: action.payload }
+    case 'accumulateStepNumber':
+      return { ...state, stepNumber: state.stepNumber + 1 }
+    case 'toggleOIsNext':
+      return { ...state, oIsNext: !state.oIsNext }
+    case 'updateWinner':
+      return { ...state, winner: checkWinner(state.squares) }
+    case 'reset':
+      return {
+        aiIsPreEmptive: initState.aiIsPreEmptive,
+        roles: initState.roles,
+        stepNumber: initState.stepNumber,
+        oIsNext: initState.oIsNext,
+        winner: initState.winner,
+        positionList: initState.positionList,
+        squares: initState.squares,
+      }
+    default:
+      throw new Error()
     }
   }
 
@@ -403,14 +416,16 @@ export default function Game() {
   useEffect(() => {
     if (state.aiIsPreEmptive === true) {
       dispatch({ type: 'AI_X' })
-    } else if (state.aiIsPreEmptive === false) {
+    }
+    else if (state.aiIsPreEmptive === false) {
       dispatch({ type: 'AI_O' })
     }
 
     if (state.roles.AI === 'O' && !state.oIsNext) {
       const result = generatePosition(state, weightingList)
       updateGameState(result.row, result.column)
-    } else if (state.roles.AI === 'X' && state.oIsNext) {
+    }
+    else if (state.roles.AI === 'X' && state.oIsNext) {
       const result = generatePosition(state, weightingList)
       updateGameState(result.row, result.column)
     }
@@ -426,21 +441,20 @@ export default function Game() {
         squares={state.squares}
         onClick={(row, column) => {
           updateGameState(row, column)
-        }}
-      />
+        }}/>
 
+      {/* TODO: make below div to a component */}
       <div
         className="bg-white/10 mx-auto mt-24 relative"
-        style={{ borderRadius: '40px' }}
-      >
+        style={{ borderRadius: '40px' }}>
         <div
           className={`flex flex-row gap-x-8 flex-nowrap px-10 py-6 items-start ${
             state.aiIsPreEmptive === undefined ||
-            (state?.winner === null && state?.stepNumber === 9)
+            (state?.winner === null && state?.stepNumber === 9) ||
+            state?.winner
               ? 'opacity-20'
               : ''
-          }`}
-        >
+          }`}>
           <div className="flex flex-col gap-y-2">
             <div
               className="w-20 h-20 rounded-full flex justify-center items-center"
@@ -454,18 +468,18 @@ export default function Game() {
                     !state?.oIsNext)
                     ? 'rgba(255, 255, 255, 0.3)'
                     : 'rgba(0, 0, 0, 0.2)',
-              }}
-            >
-              {state.roles?.AI === undefined ? (
-                <></>
-              ) : (
-                <img
-                  className="w-8"
-                  src={`/images/${
-                    state.roles?.AI === 'X' ? 'x' : 'o'
-                  }_white.svg`}
-                />
-              )}
+              }}>
+              {state.roles?.AI === undefined
+                ? (
+                  <></>
+                )
+                : (
+                  <img
+                    className="w-8"
+                    src={`/images/${
+                      state.roles?.AI === 'X' ? 'x' : 'o'
+                    }_white.svg`}/>
+                )}
             </div>
             <div className="text-white/70 text-center">A.I</div>
             <div className="text-white/30 text-center text-sm">Player 2</div>
@@ -488,18 +502,18 @@ export default function Game() {
                     state?.oIsNext)
                     ? 'rgba(255, 255, 255, 0.3)'
                     : 'rgba(0, 0, 0, 0.2)',
-              }}
-            >
-              {state.roles?.Player === undefined ? (
-                <></>
-              ) : (
-                <img
-                  className="w-10"
-                  src={`/images/${
-                    state.roles?.Player === 'X' ? 'x' : 'o'
-                  }_white.svg`}
-                />
-              )}
+              }}>
+              {state.roles?.Player === undefined
+                ? (
+                  <></>
+                )
+                : (
+                  <img
+                    className="w-10"
+                    src={`/images/${
+                      state.roles?.Player === 'X' ? 'x' : 'o'
+                    }_white.svg`}/>
+                )}
             </div>
             <div className="text-white/70 text-center">You</div>
             <div className="text-white/30 text-center text-sm">Player 1</div>
@@ -507,26 +521,29 @@ export default function Game() {
         </div>
 
         {state?.aiIsPreEmptive === undefined ||
-        (state?.winner === null && state?.stepNumber === 9) ? (
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-white/5 flex justify-center items-center"
-            style={{ borderRadius: '40px' }}
-          >
-            <input
-              className="text-white mt-4 text-3xl w-full h-full"
-              type="button"
-              value={`${
-                state.aiIsPreEmptive === undefined ? 'Start' : 'Play Again'
-              }`}
-              onClick={() => {
-                const aiIsPreEmptive = choosePreEmptive()
-                handleFirstMove(aiIsPreEmptive)
-              }}
-            />
-          </div>
-        ) : (
-          <></>
-        )}
+        (state?.winner === null && state?.stepNumber === 9) ||
+        state?.winner
+          ? (
+            <div
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-white/5 flex justify-center items-center z-10"
+              style={{ borderRadius: '40px' }}>
+              <input
+                className="text-white mt-4 text-3xl w-full h-full cursor-pointer"
+                type="button"
+                value={`${
+                  state.aiIsPreEmptive === undefined ? 'Start' : 'Play Again'
+                }`}
+                onClick={() => {
+                  dispatch({ type: 'reset' })
+
+                  const aiIsPreEmptive = choosePreEmptive()
+                  handleFirstMove(aiIsPreEmptive)
+                }}/>
+            </div>
+          )
+          : (
+            <></>
+          )}
       </div>
 
       {/* <GameInfos

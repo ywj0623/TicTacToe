@@ -24,8 +24,8 @@ const Square = (props) => {
             props?.value === null
               ? ''
               : props?.value === 'X'
-              ? 'url(/images/x_white.svg)'
-              : 'url(/images/o_white.svg)',
+                ? 'url(/images/x_white.svg)'
+                : 'url(/images/o_white.svg)',
           backgroundsSize: 'auto',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',

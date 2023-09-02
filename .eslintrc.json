@@ -1,9 +1,42 @@
 {
-  "extends": ["eslint:recommended", "plugin:react/recommended", "prettier"],
-  "plugins": ["react", "prettier"],
-  "parser": "@babel/eslint-parser",
+  "extends": ["eslint:recommended", "plugin:react/recommended"],
+  "plugins": ["react"],
+  "parserOptions": {
+    "ecmaVersion": 12,
+    "sourceType": "module",
+    "ecmaFeatures": { "jsx": true }
+  },
   "rules": {
-    "prettier/prettier": "error"
+    "semi": [
+      "error",
+      "never",
+      { "beforeStatementContinuationChars": "always" }
+    ],
+    "quotes": ["error", "single"],
+    "indent": ["error", 2],
+    "multiline-ternary": ["error", "always-multiline"],
+
+    "array-bracket-newline": ["error", "consistent"],
+
+    "object-property-newline": [
+      "error",
+      { "allowAllPropertiesOnSameLine": true }
+    ],
+    "object-curly-spacing": ["error", "always"],
+
+    "brace-style": ["error", "stroustrup", { "allowSingleLine": true }],
+
+    "react/jsx-indent-props": [2, 2],
+    "react/jsx-wrap-multilines": [
+      "error",
+      {
+        "declaration": "parens-new-line",
+        "assignment": "parens-new-line",
+        "return": "parens-new-line",
+        "arrow": "parens-new-line"
+      }
+    ],
+    "react/jsx-closing-bracket-location": ["error", "after-props"]
   },
   "settings": {
     "react": {
