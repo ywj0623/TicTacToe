@@ -265,9 +265,8 @@ export default function Chessboard(props) {
 
   const renderSquare = (row, column) => {
     return (
-      <Suspense>
+      <Suspense fallback={<div>Loading...</div>} key={row * 3 + column}>
         <Square
-          key={row * 3 + column}
           isPlaying={props.isPlaying}
           value={state.squares[row][column]}
           onClick={() => {

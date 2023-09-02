@@ -5,7 +5,7 @@ const RoleMark = lazy(() => import('.//RoleMark'))
 
 export default function Scoreboard(props) {
   return (
-    <Suspense>
+    <Suspense fallback={<div>Loading...</div>}>
       <div
         className="bg-white/10 mx-auto mt-24 relative"
         style={{ borderRadius: '40px' }}>
