@@ -34,10 +34,6 @@ export default function Square(props) {
 }
 
 Square.propTypes = {
-  // aiIsPreEmptive: PropTypes.bool,
-  // onClick: PropTypes.func,
-  // value: PropTypes.string,
-  // ---
   isPlaying: PropTypes.bool,
   value: PropTypes.string,
   onClick: PropTypes.func,

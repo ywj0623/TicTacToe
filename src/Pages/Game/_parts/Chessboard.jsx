@@ -10,6 +10,18 @@ import PropTypes from 'prop-types'
 
 const Square = lazy(() => import('.//Square'))
 
+const positionList = [
+  [0, 0],
+  [0, 1],
+  [0, 2],
+  [1, 0],
+  [1, 1],
+  [1, 2],
+  [2, 0],
+  [2, 1],
+  [2, 2],
+]
+
 const weightingList = {
   '0, 0': 0,
   '0, 1': 0,
@@ -105,8 +117,8 @@ function setSpecificPositionWeight(gameInfos, weightingList) {
 function checkOpponentSurroundingEmpty(gameInfos, weightingList) {
   const squares = gameInfos.squares
 
-  for (let i = 0; i < gameInfos.positionList.length; i++) {
-    const [a, b] = gameInfos.positionList[i]
+  for (let i = 0; i < positionList.length; i++) {
+    const [a, b] = positionList[i]
 
     if (squares[a][b] === gameInfos.playerRole) {
       for (let i = a - 1; i <= a + 1; i++) {
@@ -119,8 +131,8 @@ function checkOpponentSurroundingEmpty(gameInfos, weightingList) {
     }
   }
 
-  for (let i = 0; i < gameInfos.positionList.length; i++) {
-    const [a, b] = gameInfos.positionList[i]
+  for (let i = 0; i < positionList.length; i++) {
+    const [a, b] = positionList[i]
 
     if (squares[a][b] === gameInfos.playerRole) {
       weightingList[`${a}, ${b}`] = 0
@@ -245,17 +257,6 @@ export default function Chessboard(props) {
     stepNumber: 0,
     oIsNext: true,
     winner: null,
-    positionList: [
-      [0, 0],
-      [0, 1],
-      [0, 2],
-      [1, 0],
-      [1, 1],
-      [1, 2],
-      [2, 0],
-      [2, 1],
-      [2, 2],
-    ],
     squares: Array.from({ length: 3 }, () => Array(3).fill(null)),
     // squares: Array(3).fill(null).map(() => Array(3).fill(null))
   }
@@ -291,15 +292,7 @@ export default function Chessboard(props) {
     case 'updateWinner':
       return { ...state, winner: checkWinner(state.squares) }
     case 'reset':
-      return {
-        aiRole: initState.aiRole,
-        playerRole: initState.playerRole,
-        stepNumber: initState.stepNumber,
-        oIsNext: initState.oIsNext,
-        winner: initState.winner,
-        positionList: initState.positionList,
-        squares: initState.squares,
-      }
+      return { ...initState }
     default:
       throw new Error()
     }
