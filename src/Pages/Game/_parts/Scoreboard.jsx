@@ -5,19 +5,19 @@ const RoleMark = lazy(() => import('.//RoleMark'))
 
 export default function Scoreboard(props) {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={ <div>Loading...</div> }>
       <div
         className="bg-white/10 mx-auto mt-24 relative"
-        style={{ borderRadius: '40px' }}>
+        style={ { borderRadius: '40px' } }>
         <div
-          className={`flex flex-row gap-x-8 flex-nowrap px-10 py-6 items-start ${
+          className={ `flex flex-row gap-x-8 flex-nowrap px-10 py-6 items-start ${
             !props.isPlaying || props?.gameResult ? 'opacity-20' : ''
-          }`}>
+          }` }>
           <RoleMark
-            isPlaying={props.isPlaying}
-            playerRole={props.playerRole}
-            aiRole={props.aiRole}
-            role={'playerRole'}/>
+            isPlaying={ props.isPlaying }
+            playerRole={ props.playerRole }
+            aiRole={ props.aiRole }
+            role={ 'playerRole' }/>
 
           <div className="flex justify-center items-center h-20">
             <div className="text-5xl text-white tracking-widest">
@@ -26,23 +26,23 @@ export default function Scoreboard(props) {
           </div>
 
           <RoleMark
-            isPlaying={props.isPlaying}
-            playerRole={props.playerRole}
-            aiRole={props.aiRole}
-            role={'aiRole'}/>
+            isPlaying={ props.isPlaying }
+            playerRole={ props.playerRole }
+            aiRole={ props.aiRole }
+            role={ 'aiRole' }/>
         </div>
 
         {!props.isPlaying && (
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-white/5 flex justify-center items-center z-10"
-            style={{ borderRadius: '40px' }}>
+            style={ { borderRadius: '40px' } }>
             <input
               className="text-white mt-4 text-3xl w-full h-full cursor-pointer"
               type="button"
-              value={`${props.gameResult === null ? 'Start' : 'Play Again'}`}
-              onClick={() => {
+              value={ `${props.gameResult === null ? 'Start' : 'Play Again'}` }
+              onClick={ () => {
                 props.onClick()
-              }}/>
+              } }/>
           </div>
         )}
       </div>

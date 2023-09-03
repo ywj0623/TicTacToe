@@ -7,36 +7,72 @@
     "ecmaFeatures": { "jsx": true }
   },
   "rules": {
+    // --- Possible Problem ---
+    "no-unused-vars": "warn",
+
+    // --- Suggestions ---
+    "eqeqeq": "warn",
+    // "no-console": "warn",
+
+    // --- Styling ---
+    "array-bracket-newline": ["error", { "multiline": true }],
+    "array-bracket-spacing": ["error", "always"],
+    "array-element-newline": ["error", "consistent"],
+
+    "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
+
+    "function-call-argument-newline": ["error", "consistent"],
+
+    // "indent": [
+    //     "error",
+    //     2,
+    //     {
+    //         "SwitchCase": 1,
+    //         "flatTernaryExpressions": true,
+    //         "offsetTernaryExpressions": true
+    //     }
+    // ],
+
+    "multiline-ternary": ["error", "always-multiline"],
+
+    "object-curly-newline": ["error", { "consistent": true }],
+    "object-curly-spacing": ["error", "always"],
+    "object-property-newline": [
+      "error",
+      { "allowAllPropertiesOnSameLine": true }
+    ],
+
+    "operator-linebreak": [
+      "error",
+      "after",
+      { "overrides": { "?": "ignore", ":": "ignore" } }
+    ],
+
+    "quotes": ["error", "single"],
+
     "semi": [
       "error",
       "never",
       { "beforeStatementContinuationChars": "always" }
     ],
-    "quotes": ["error", "single"],
-    "indent": ["error", 2],
-    "multiline-ternary": ["error", "always-multiline"],
 
-    "array-bracket-newline": ["error", "consistent"],
+    "react/jsx-closing-bracket-location": ["error", "after-props"],
 
-    "object-property-newline": [
-      "error",
-      { "allowAllPropertiesOnSameLine": true }
-    ],
-    "object-curly-spacing": ["error", "always"],
+    "react/jsx-curly-spacing": ["error", { "when": "always" }],
 
-    "brace-style": ["error", "stroustrup", { "allowSingleLine": true }],
+    "react/jsx-indent-props": ["error", 2],
+    "react/jsx-indent": ["error", 2, { "indentLogicalExpressions": true }],
 
-    "react/jsx-indent-props": [2, 2],
     "react/jsx-wrap-multilines": [
       "error",
       {
         "declaration": "parens-new-line",
         "assignment": "parens-new-line",
+        "logical": "ignore",
         "return": "parens-new-line",
         "arrow": "parens-new-line"
       }
-    ],
-    "react/jsx-closing-bracket-location": ["error", "after-props"]
+    ]
   },
   "settings": {
     "react": {

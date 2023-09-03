@@ -4,7 +4,7 @@ import PropTypes from 'prop-types'
 export default function Square(props) {
   return (
     <button
-      style={{
+      style={ {
         width: '150px',
         height: '150px',
         maxWidth: '150px',
@@ -13,22 +13,22 @@ export default function Square(props) {
         backgroundSize: 'auto',
         backgroundImage: 'url(/images/gird_bg.svg)',
         boxShadow: '0 14px 17px rgb(0, 0, 0, 0.07)',
-      }}
-      disabled={!props?.isPlaying}
-      onClick={props?.onClick}>
+      } }
+      disabled={ !props?.isPlaying }
+      onClick={ props?.onClick }>
       <span
         className="inline-block w-24 h-24"
-        style={{
+        style={ {
           backgroundImage:
             props?.value === null
               ? ''
               : props?.value === 'X'
-                ? 'url(/images/x_white.svg)'
-                : 'url(/images/o_white.svg)',
+              ? 'url(/images/x_white.svg)'
+              : 'url(/images/o_white.svg)',
           backgroundsSize: 'auto',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
-        }}></span>
+        } }/>
     </button>
   )
 }

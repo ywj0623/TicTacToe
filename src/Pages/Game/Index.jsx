@@ -5,7 +5,7 @@ const Chessboard = lazy(() => import('./_parts/Chessboard'))
 const Scoreboard = lazy(() => import('./_parts/Scoreboard'))
 
 export default function Game() {
-  const [state, dispatch] = useReducer(stateReducer, {
+  const [ state, dispatch ] = useReducer(stateReducer, {
     isPlaying: false,
     aiRole: undefined,
     sumOfAiWin: 0,
@@ -16,28 +16,28 @@ export default function Game() {
 
   function stateReducer(state, action) {
     switch (action.type) {
-    case 'isPlaying':
-      return { ...state, isPlaying: !state.isPlaying }
-    case 'aiRole':
-      return { ...state, aiRole: action.payload }
-    case 'playerRole':
-      return { ...state, playerRole: action.payload }
-    case 'gameResult':
-      return { ...state, gameResult: action.payload }
-    case 'aiWin':
-      return { ...state, sumOfAiWin: state.sumOfAiWin + 1 }
-    case 'playerWin':
-      return { ...state, sumOfPlayerWin: state.sumOfPlayerWin + 1 }
+      case 'isPlaying':
+        return { ...state, isPlaying: !state.isPlaying }
+      case 'aiRole':
+        return { ...state, aiRole: action.payload }
+      case 'playerRole':
+        return { ...state, playerRole: action.payload }
+      case 'gameResult':
+        return { ...state, gameResult: action.payload }
+      case 'aiWin':
+        return { ...state, sumOfAiWin: state.sumOfAiWin + 1 }
+      case 'playerWin':
+        return { ...state, sumOfPlayerWin: state.sumOfPlayerWin + 1 }
     }
   }
 
   return (
     <>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={ <div>Loading...</div> }>
         <div className="min-h-screen container mx-auto flex flex-col items-middle justify-center">
           <Chessboard
-            isPlaying={state.isPlaying}
-            onStart={(result) => {
+            isPlaying={ state.isPlaying }
+            onStart={ (result) => {
               dispatch({
                 type: 'aiRole',
                 payload: result.aiRole,
@@ -50,8 +50,8 @@ export default function Game() {
                 type: 'gameResult',
                 payload: null,
               })
-            }}
-            onEnd={(result) => {
+            } }
+            onEnd={ (result) => {
               dispatch({
                 type: 'gameResult',
                 payload: result.gameResult,
@@ -59,31 +59,31 @@ export default function Game() {
               dispatch({ type: 'isPlaying' })
 
               switch (result.gameResult) {
-              case 'X':
-              case 'O':
-                state.aiRole === result.gameResult
-                  ? dispatch({ type: 'aiWin' })
-                  : dispatch({ type: 'playerWin' })
-                return
+                case 'X':
+                case 'O':
+                  state.aiRole === result.gameResult
+                    ? dispatch({ type: 'aiWin' })
+                    : dispatch({ type: 'playerWin' })
+                  return
 
-              case 'tied':
-                return
+                case 'tied':
+                  return
               }
               return
-            }}/>
+            } }/>
 
           <div className="my-12"></div>
 
           <Scoreboard
-            isPlaying={state.isPlaying}
-            aiRole={state.aiRole}
-            sumOfAiWin={state.sumOfAiWin}
-            playerRole={state.playerRole}
-            sumOfPlayerWin={state.sumOfPlayerWin}
-            gameResult={state.gameResult}
-            onClick={() => {
+            isPlaying={ state.isPlaying }
+            aiRole={ state.aiRole }
+            sumOfAiWin={ state.sumOfAiWin }
+            playerRole={ state.playerRole }
+            sumOfPlayerWin={ state.sumOfPlayerWin }
+            gameResult={ state.gameResult }
+            onClick={ () => {
               dispatch({ type: 'isPlaying' })
-            }}/>
+            } }/>
         </div>
       </Suspense>
     </>

@@ -11,15 +11,15 @@ import PropTypes from 'prop-types'
 const Square = lazy(() => import('.//Square'))
 
 const positionList = [
-  [0, 0],
-  [0, 1],
-  [0, 2],
-  [1, 0],
-  [1, 1],
-  [1, 2],
-  [2, 0],
-  [2, 1],
-  [2, 2],
+  [ 0, 0 ],
+  [ 0, 1 ],
+  [ 0, 2 ],
+  [ 1, 0 ],
+  [ 1, 1 ],
+  [ 1, 2 ],
+  [ 2, 0 ],
+  [ 2, 1 ],
+  [ 2, 2 ],
 ]
 
 const weightingList = {
@@ -34,77 +34,97 @@ const weightingList = {
   '2, 2': 0,
 }
 
-const lines = [
+const winnerLines = [
   // 以下為完成連線的座標， [x, y] x 代表 row, y 代表 column
   [
-    [0, 0],
-    [0, 1],
-    [0, 2],
+    [ 0, 0 ],
+    [ 0, 1 ],
+    [ 0, 2 ],
   ],
   [
-    [1, 0],
-    [1, 1],
-    [1, 2],
+    [ 1, 0 ],
+    [ 1, 1 ],
+    [ 1, 2 ],
   ],
   [
-    [2, 0],
-    [2, 1],
-    [2, 2],
+    [ 2, 0 ],
+    [ 2, 1 ],
+    [ 2, 2 ],
   ],
   [
-    [0, 0],
-    [1, 0],
-    [2, 0],
+    [ 0, 0 ],
+    [ 1, 0 ],
+    [ 2, 0 ],
   ],
   [
-    [0, 1],
-    [1, 1],
-    [2, 1],
+    [ 0, 1 ],
+    [ 1, 1 ],
+    [ 2, 1 ],
   ],
   [
-    [0, 2],
-    [1, 2],
-    [2, 2],
+    [ 0, 2 ],
+    [ 1, 2 ],
+    [ 2, 2 ],
   ],
   [
-    [0, 0],
-    [1, 1],
-    [2, 2],
+    [ 0, 0 ],
+    [ 1, 1 ],
+    [ 2, 2 ],
   ],
   [
-    [0, 2],
-    [1, 1],
-    [2, 0],
+    [ 0, 2 ],
+    [ 1, 1 ],
+    [ 2, 0 ],
   ],
 ]
 
 function genRandomPosition(targetArray = null) {
-  const randomNum = Math.floor(Math.random() * 10)
-  const condition = targetArray
-    ? targetArray.includes(randomNum)
-    : 0 <= randomNum && randomNum !== 9
+  // 以下為原版，偏命令式的作法
+  // const randomNum = Math.floor(Math.random() * 10)
+  // const condition = targetArray
+  //   ? targetArray.includes(randomNum)
+  //   : 0 <= randomNum && randomNum !== 9
 
-  if (condition) {
-    const row = Math.floor(randomNum / 3)
-    const column = randomNum % 3
-    return { row, column }
-  }
+  // if (condition) {
+  //   const row = Math.floor(randomNum / 3)
+  //   const column = randomNum % 3
+  //   return { row, column }
+  // }
 
-  return targetArray ? genRandomPosition(targetArray) : genRandomPosition()
+  // return targetArray ? genRandomPosition(targetArray) : genRandomPosition()
+
+  // 以下為 ChatGPT 修改後的聲明式作法
+  const possiblePositions = [ ...Array(9).keys() ]
+  const filteredPositions = targetArray
+    ? possiblePositions.filter((position) => targetArray.includes(position))
+    : []
+
+  const randomIndex = targetArray
+    ? Math.floor(Math.random() * filteredPositions.length)
+    : Math.floor(Math.random() * possiblePositions.length)
+  const randomPosition = targetArray
+    ? filteredPositions[randomIndex]
+    : possiblePositions[randomIndex]
+
+  const row = Math.floor(randomPosition / 3)
+  const column = randomPosition % 3
+
+  return { row, column }
 }
 
+// accumulate weight score --->
 function setSpecificPositionWeight(gameInfos, weightingList) {
   const squares = gameInfos.squares
   const specificPosition = [
-    [0, 0], // 0
-    [0, 2], // 1
-    [1, 1], // 2
-    [2, 0], // 3
-    [2, 2], // 4
+    [ 0, 0 ], // 0
+    [ 0, 2 ], // 1
+    [ 1, 1 ], // 2
+    [ 2, 0 ], // 3
+    [ 2, 2 ], // 4
   ]
 
   for (let i = 0; i < specificPosition.length; i++) {
-    const [a, b] = specificPosition[i]
+    const [ a, b ] = specificPosition[i]
 
     if (squares[a][b] === null) {
       weightingList[`${a}, ${b}`] += 5
@@ -118,7 +138,7 @@ function checkOpponentSurroundingEmpty(gameInfos, weightingList) {
   const squares = gameInfos.squares
 
   for (let i = 0; i < positionList.length; i++) {
-    const [a, b] = positionList[i]
+    const [ a, b ] = positionList[i]
 
     if (squares[a][b] === gameInfos.playerRole) {
       for (let i = a - 1; i <= a + 1; i++) {
@@ -132,12 +152,11 @@ function checkOpponentSurroundingEmpty(gameInfos, weightingList) {
   }
 
   for (let i = 0; i < positionList.length; i++) {
-    const [a, b] = positionList[i]
+    const [ a, b ] = positionList[i]
 
     if (squares[a][b] === gameInfos.playerRole) {
       weightingList[`${a}, ${b}`] = 0
-    }
-    else if (squares[a][b] === gameInfos.aiRole) {
+    } else if (squares[a][b] === gameInfos.aiRole) {
       weightingList[`${a}, ${b}`] = 0
     }
   }
@@ -147,25 +166,26 @@ function checkOpponentSurroundingEmpty(gameInfos, weightingList) {
 }
 
 function checkOccupied(gameInfos, weightingList, occupiedSpace, weights) {
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i]
-    const [x1, y1] = a
-    const [x2, y2] = b
-    const [x3, y3] = c
+  for (let i = 0; i < winnerLines.length; i++) {
+    const [ a, b, c ] = winnerLines[i]
+    const [ x1, y1 ] = a
+    const [ x2, y2 ] = b
+    const [ x3, y3 ] = c
     const Player = gameInfos.aiIsPreEmptive ? 'O' : 'X'
     const NPC = gameInfos.aiIsPreEmptive ? 'X' : 'O'
 
-    const [playerOccupied1, playerOccupied2, playerOccupied3] = [
+    const [ playerOccupied1, playerOccupied2, playerOccupied3 ] = [
       gameInfos.squares[x1][y1] === Player,
       gameInfos.squares[x2][y2] === Player,
       gameInfos.squares[x3][y3] === Player,
     ]
-    const [npcOccupied1, npcOccupied2, npcOccupied3] = [
+    const [ npcOccupied1, npcOccupied2, npcOccupied3 ] = [
       gameInfos.squares[x1][y1] === NPC,
       gameInfos.squares[x2][y2] === NPC,
       gameInfos.squares[x3][y3] === NPC,
     ]
-    const emptySpace = lines[i].filter((node) => node === null).length === 2
+    const emptySpace =
+      winnerLines[i].filter((node) => node === null).length === 2
 
     const conditions = [
       (playerOccupied1 && emptySpace) ||
@@ -212,14 +232,14 @@ function checkOccupied(gameInfos, weightingList, occupiedSpace, weights) {
 }
 
 function check1OccupiedAnd2Empty(gameInfos, weightingList) {
-  return checkOccupied(gameInfos, weightingList, 1, [15, 10])
+  return checkOccupied(gameInfos, weightingList, 1, [ 15, 10 ])
 }
 
 function check2Occupied1Empty(gameInfos, weightingList) {
-  return checkOccupied(gameInfos, weightingList, 2, [50, 100])
+  return checkOccupied(gameInfos, weightingList, 2, [ 50, 100 ])
 }
 
-function generatePosition(gameInfos, weightingList) {
+function accuPositionTotalWeight(gameInfos, weightingList) {
   setSpecificPositionWeight(gameInfos, weightingList)
   checkOpponentSurroundingEmpty(gameInfos, weightingList)
   check1OccupiedAnd2Empty(gameInfos, weightingList)
@@ -241,14 +261,14 @@ function generatePosition(gameInfos, weightingList) {
     }
 
     result = genRandomPosition(indices)
-  }
-  else {
+  } else {
     indices.push(target)
     result = genRandomPosition(indices)
   }
 
   return result
 }
+// accumulate weight score <---
 
 export default function Chessboard(props) {
   const initState = {
@@ -261,62 +281,49 @@ export default function Chessboard(props) {
     // squares: Array(3).fill(null).map(() => Array(3).fill(null))
   }
 
-  const [state, dispatch] = useReducer(stateReducer, initState)
-
-  const renderSquare = (row, column) => {
-    return (
-      <Suspense fallback={<div>Loading...</div>} key={row * 3 + column}>
-        <Square
-          isPlaying={props.isPlaying}
-          value={state.squares[row][column]}
-          onClick={() => {
-            updateGameState(row, column)
-          }}/>
-      </Suspense>
-    )
-  }
+  const [ state, dispatch ] = useReducer(stateReducer, initState)
 
   function stateReducer(state, action) {
     switch (action.type) {
-    case 'aiRole':
-      return { ...state, aiRole: action.payload }
-    case 'playerRole':
-      return { ...state, playerRole: action.payload }
-    case 'updatedSquares':
-      return { ...state, squares: action.payload }
-    case 'accumulateStepNumber':
-      return { ...state, stepNumber: state.stepNumber + 1 }
-    case 'toggleOIsNext':
-      return { ...state, oIsNext: !state.oIsNext }
-    case 'updateWinner':
-      return { ...state, winner: checkWinner(state.squares) }
-    case 'reset':
-      return { ...initState }
-    default:
-      throw new Error()
+      case 'aiRole':
+        return { ...state, aiRole: action.payload }
+      case 'playerRole':
+        return { ...state, playerRole: action.payload }
+      case 'updatedSquares':
+        return { ...state, squares: action.payload }
+      case 'accumulateStepNumber':
+        return { ...state, stepNumber: state.stepNumber + 1 }
+      case 'toggleOIsNext':
+        return { ...state, oIsNext: !state.oIsNext }
+      case 'updateWinner':
+        return { ...state, winner: checkWinner(state.squares) }
+      case 'initState':
+        return { ...initState }
+      default:
+        throw new Error()
     }
   }
 
-  function choosePreEmptive() {
-    const randomNum = Math.random() * 100
-
-    if (randomNum < 50) {
+  // for handling AI move --->
+  function choosePreEmptive(num) {
+    if (num < 50) {
       return true
     }
 
     return false
   }
 
-  function handleAiMove() {
-    const result =
+  function genAiMovePosition() {
+    const { row, column } =
       state.stepNumber === 0
         ? genRandomPosition()
-        : generatePosition(state, weightingList)
+        : accuPositionTotalWeight(state, weightingList)
 
-    updateGameState(result.row, result.column)
-    return
+    return { row, column }
   }
+  // for handling AI move <---
 
+  // update squares --->
   const updateSquares = useCallback(
     (row, column) => {
       const squares = state.squares.slice()
@@ -328,31 +335,34 @@ export default function Chessboard(props) {
       squares[row][column] = state.oIsNext ? 'X' : 'O'
       return squares
     },
-    [state.squares, state.oIsNext]
+    [ state.squares, state.oIsNext ]
   )
 
-  function updateGameState(row, column) {
-    const updatedSquares = updateSquares(row, column)
-
-    if (!updatedSquares) {
-      return console.log('generatePosition function crush')
+  function updateGameState(result) {
+    if (!result) {
+      return console.log('accuPositionTotalWeight function crush')
     }
 
     dispatch({
       type: 'updatedSquares',
-      payload: updatedSquares,
+      payload: result,
     })
     dispatch({ type: 'accumulateStepNumber' })
     dispatch({ type: 'toggleOIsNext' })
-    return
   }
 
+  async function handleSquaresUpdate(row, column) {
+    const result = await updateSquares(row, column)
+    updateGameState(result)
+  }
+  // update squares <---
+
   function checkWinner(squares) {
-    for (let i = 0; i < lines.length; i++) {
-      const [a, b, c] = lines[i]
-      const [x1, y1] = a
-      const [x2, y2] = b
-      const [x3, y3] = c
+    for (let i = 0; i < winnerLines.length; i++) {
+      const [ a, b, c ] = winnerLines[i]
+      const [ x1, y1 ] = a
+      const [ x2, y2 ] = b
+      const [ x3, y3 ] = c
 
       if (
         squares[x1][y1] &&
@@ -362,14 +372,15 @@ export default function Chessboard(props) {
         return squares[x1][y1]
       }
     }
-
     return null
   }
 
   useEffect(() => {
     if (props.isPlaying === true) {
-      dispatch({ type: 'reset' })
-      const aiIsPreEmptive = choosePreEmptive()
+      dispatch({ type: 'initState' })
+
+      const randomNum = Math.random() * 100
+      const aiIsPreEmptive = choosePreEmptive(randomNum)
 
       dispatch({
         type: 'aiRole',
@@ -385,7 +396,7 @@ export default function Chessboard(props) {
         playerRole: aiIsPreEmptive ? 'O' : 'X',
       })
     }
-  }, [props.isPlaying])
+  }, [ props.isPlaying ])
 
   useEffect(() => {
     if (
@@ -393,36 +404,48 @@ export default function Chessboard(props) {
       (state.aiRole === 'X' && state.oIsNext && state.stepNumber !== 9) ||
       (state.aiRole === 'O' && !state.oIsNext && state.stepNumber !== 9)
     ) {
-      handleAiMove()
+      const { row, column } = genAiMovePosition()
+      handleSquaresUpdate(row, column)
     }
 
     return
-  }, [state.aiRole, state.stepNumber, state.oIsNext])
+  }, [ state.aiRole, state.stepNumber, state.oIsNext ])
 
   useEffect(() => {
     dispatch({ type: 'updateWinner' })
-  }, [updateSquares])
+  }, [ updateSquares ])
 
   useEffect(() => {
     switch (state.winner) {
-    case 'X':
-    case 'O':
-      props.onEnd({ gameResult: state.winner })
-      return
+      case 'X':
+      case 'O':
+        props.onEnd({ gameResult: state.winner })
+        return
 
-    case null:
-      state.stepNumber === 9 ? props.onEnd({ gameResult: 'tiedGame' }) : null
-      return
+      case null:
+        state.stepNumber === 9 ? props.onEnd({ gameResult: 'tiedGame' }) : null
+        return
     }
-  }, [state.winner, state.stepNumber])
+  }, [ state.winner, state.stepNumber ])
 
   return (
     <div className="flex flex-col flex-wrap gap-y-5">
-      {[0, 1, 2].map((node, idx) => {
+      {[ 0, 1, 2 ].map((row, row_index) => {
         return (
-          <div className="flex flex-row gap-x-5 mx-auto" key={idx}>
-            {[0, 1, 2].map((innerNode) => {
-              return renderSquare(node, innerNode)
+          <div className="flex flex-row gap-x-5 mx-auto" key={ row_index }>
+            {[ 0, 1, 2 ].map((column) => {
+              return (
+                <Suspense
+                  fallback={ <div>Loading...</div> }
+                  key={ row * 3 + column }>
+                  <Square
+                    isPlaying={ props.isPlaying }
+                    value={ state.squares[row][column] }
+                    onClick={ () => {
+                      handleSquaresUpdate(row, column)
+                    } }/>
+                </Suspense>
+              )
             })}
           </div>
         )
